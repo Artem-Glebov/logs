@@ -1,0 +1,14 @@
+filebeat.inputs:
+  - type: container
+    paths:
+      - /var/lib/docker/containers/*/*.log
+
+output.file:
+  path: "/var/log"
+  filename: "test"
+  rotate_every_kb: 10240
+  number_of_files: 5
+
+http.enabled: true
+http.host: "0.0.0.0"
+http.port: 5066

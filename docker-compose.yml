@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - logs-net
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "80:3000"
+    networks:
+      - logs-net
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:latest
+    user: root
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/log/test:/var/log/test
+    networks:
+      - logs-net
+
+networks:
+  logs-net:
+    driver: bridge
