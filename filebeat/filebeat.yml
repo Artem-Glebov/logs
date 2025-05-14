@@ -1,16 +1,27 @@
 filebeat.inputs:
-  - type: filestream
-    paths:
-      - /var/lib/docker/containers/*/*.log
-    processors:
-      - add_docker_metadata: ~
+- type: filestream
+  id: containers-input
+  prospector.scanner.symlinks: true
+  parsers:
+    - container:
+        stream: all
+        format: docker
+  paths:
+    - '/var/lib/docker/containers/*/*.log'
+
+  processors:
+    - add_docker_metadata:
+        host: "unix:///var/run/docker.sock"
+
 
 output.file:
-  path: "/var/log"
+  path: "/var/dockers-logs/"
   filename: "test"
-  rotate_every_kb: 10240
-  number_of_files: 5
+  rotate_on_startup: false
 
-http.enabled: true
-http.host: "0.0.0.0"
-http.port: 5066
+setup.template.enabled: false
+
+http:
+  enabled: true
+  host: "0.0.0.0"
+  port: 5066

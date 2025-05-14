@@ -16,6 +16,8 @@ services:
     container_name: grafana
     ports:
       - "80:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
     networks:
       - logs-net
 
@@ -27,9 +29,27 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - /var/log/test:/var/log/test
+      - /var/log/:/var/dockers-logs/
+    ports:
+      - 5066:5066
     networks:
       - logs-net
+
+  beats-exporter:
+    image: dezmodue/beat-exporter:0.4.0
+    container_name: beats-exporter
+    ports:
+      - "9479:9479"
+    depends_on:
+      - filebeat
+    networks:
+      - logs-net
+    command:
+      - "--beat.uri=http://filebeat:5066"
+      - "--web.listen-address=0.0.0.0:9479"
+
+volumes:
+  grafana-storage: {}
 
 networks:
   logs-net:
