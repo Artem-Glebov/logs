@@ -1,0 +1,101 @@
+---
+- name: Install Filebeat based on architecture
+  hosts: localhost
+  become: true
+  vars:
+    filebeat_config_path: "/etc/filebeat/filebeat.yml"
+
+  tasks:
+    - name: Determine architecture type
+      command: uname -m
+      register: arch
+      changed_when: false
+
+    - name: Import GPG key for aarch64
+      when: arch.stdout == "aarch64"
+      command: rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+    - name: Create .repo file for aarch64
+      when: arch.stdout == "aarch64"
+      copy:
+        dest: /etc/yum.repos.d/elastic.repo
+        content: |
+          [elastic-9.x]
+          name=Elastic repository for 9.x packages
+          baseurl=https://artifacts.elastic.co/packages/9.x/yum
+          gpgcheck=1
+          gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+          enabled=1
+          autorefresh=1
+          type=rpm-md
+
+    - name: Install Filebeat for aarch64
+      when: arch.stdout == "aarch64"
+      command: yum install -y filebeat
+
+    - name: Enable Filebeat service for aarch64
+      when: arch.stdout == "aarch64"
+      systemd:
+        name: filebeat
+        enabled: true
+        state: started
+
+    # Ubuntu part
+    - name: Import GPG key for amd64
+      when: arch.stdout == "x86_64"
+      command: wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
+
+    - name: Install apt-transport-https for amd64
+      when: arch.stdout == "x86_64"
+      apt:
+        name: apt-transport-https
+        state: present
+
+    - name: Add Elastic APT repository for amd64
+      when: arch.stdout == "x86_64"
+      copy:
+        dest: /etc/apt/sources.list.d/elastic-9.0.list
+        content: "deb https://artifacts.elastic.co/packages/9.0/apt stable main"
+
+    - name: Update apt and install Filebeat for amd64
+      when: arch.stdout == "x86_64"
+      apt:
+        update_cache: yes
+        name: filebeat
+        state: present
+
+    - name: Write Filebeat config
+      copy:
+        dest: "{{ filebeat_config_path }}"
+        content: |
+          filebeat.inputs:
+            - type: filestream
+              id: containers-input
+              prospector.scanner.symlinks: true
+              parsers:
+                - container:
+                    stream: all
+                    format: docker
+              paths:
+                - "/var/lib/docker/containers/*/*.log"
+              processors:
+                - add_docker_metadata:
+                    host: "unix:///var/run/docker.sock"
+          
+          output.file:
+            path: "/var/log/"
+            filename: "test"
+          
+          http:
+            enabled: true
+            host: "0.0.0.0"
+            port: 5066
+          
+          setup.template.enabled: false
+
+    - name: Enable Filebeat service for amd64
+      when: arch.stdout == "x86_64"
+      systemd:
+        name: filebeat
+        enabled: true
+        state: started
