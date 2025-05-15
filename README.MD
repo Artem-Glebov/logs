@@ -1,5 +1,5 @@
 # Prometheus/Grafana and Docker Logs Aggregation
-This is an easy setup to monitor your docker containers logs
+This is an easy setup to monitor your docker containers logs and collect metrics from host
 ## What it contains
 - Prometheus
 - Grafana
