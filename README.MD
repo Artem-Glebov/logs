@@ -13,13 +13,15 @@ docker-compose up -d
 ```
 Or just use setup.sh
 
-Grafana will be available in http://<your_ip>:80
+Grafana will be available at http://<your_ip>:80
+
+The status of jobs at Prometheus http://<your_ip>:9090/targets
 
 ## How to inspect docker containers logs locally
 ```
 tail -f /var/log/test*.ndjson
 ```
-Or use ***jq*** to sort by a container name:
+Or use **jq** to sort by a container name:
 ```
 tail -F /var/log/test*.ndjson | jq 'select(.container.name == "grafana")'
 ```
@@ -27,12 +29,18 @@ or only messages
 ```
 tail -F /var/log/test*.ndjson | jq 'select(.container.name == "grafana") | .message'
 ```
-## Filebeat metrics 
-To see metrics from filebeat add a prometheus datasource in grafana as http://prometheus:9090
+## Prometheus metrics 
+To see metrics from Prometheus add a prometheus datasource in grafana as http://prometheus:9090
 
-Now in "Explore" you can see metrics from filebeat by job "beat-exporter" 
+Now in "Explore" you can see metrics from filebeat by job "beat-exporter". 
 
-Example: filebeat_filebeat_events{job="beats-exporter"}
+Example: **filebeat_filebeat_events{job="beats-exporter"}**
+
+Or use job "node-exporter" to get metrics from host. Examples:
+
+CPU usage: **node_load1{job="node-exporter"}**
+
+CPU usage by time: **100 - rate(node_cpu_seconds_total{mode="idle"}[5m])**
 
 ## Install local Filebeat by Ansible
 Just run
@@ -43,7 +51,7 @@ It automatically determines your architecture (aarch64 or amd64) and installs Fi
 ```
 tail -f /var/log/test*.ndjson
 ```
-Or use ***jq*** to sort by a container name:
+Or use **jq** to sort by a container name:
 ```
 tail -F /var/log/test*.ndjson | jq 'select(.container.name == "grafana")'
 ```
