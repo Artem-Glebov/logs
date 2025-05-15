@@ -1,8 +1,9 @@
 # Prometheus/Grafana and Docker Logs Aggregation
 This is an easy setup to monitor your docker containers logs
-## What it contains:
+## What it contains
 - Prometheus
 - Grafana
+- Node-exporter
 - Filebeat (beat-exporter) to collect docker logs
 ## How to start
 ```
